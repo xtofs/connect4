@@ -51,7 +51,7 @@ impl Board {
             .iter()
             .map(|bb| bb.height(column))
             .max()
-            .unwrap()
+            .unwrap() // safe because there is always two boards
     }
 
     pub fn play(&mut self, mv: &Move) -> Board {
