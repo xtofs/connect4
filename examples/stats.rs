@@ -1,15 +1,15 @@
-use std::{env::args, fmt::Display};
-
-use connect4::{Board, Color};
+use connect4::{Board, Percent, Player};
 use rand::{seq::SliceRandom, thread_rng};
+use std::{env::args, time::SystemTime};
 
 fn main() {
     let mut rng = thread_rng();
-    let (mut red, mut tie, mut green) = (0, 0, 0);
+    let (mut x_count, mut tie_count, mut o_count) = (0, 0, 0);
 
     let n: usize = args().nth(1).map(|n| n.parse().unwrap()).unwrap_or(1000);
 
-    println!("running {n} games");
+    println!("running: {} games", n);
+    let start = SystemTime::now();
     for _ in 0..n {
         let mut board = Board::default();
 
@@ -17,9 +17,9 @@ fn main() {
             match board.state() {
                 Some(state) => {
                     match state {
-                        Some(Color::Red) => red += 1,
-                        Some(Color::Green) => green += 1,
-                        None => tie += 1,
+                        Some(Player::X) => x_count += 1,
+                        Some(Player::O) => o_count += 1,
+                        None => tie_count += 1,
                     }
                     break;
                 }
@@ -34,22 +34,11 @@ fn main() {
             }
         }
     }
-    let red = Percent::from_total(red, n);
-    let tie = Percent::from_total(tie, n);
-    let green = Percent::from_total(green, n);
-    println!("stats red:{:} tie:{:} green:{:}%", red, tie, green);
-}
+    let elapsed = start.elapsed().unwrap();
+    println!("elapsed: {:.1?}", elapsed);
 
-struct Percent(f32);
-
-impl Percent {
-    pub fn from_total(n: usize, total: usize) -> Self {
-        Self(n as f32 / total as f32)
-    }
-}
-
-impl Display for Percent {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:.1$}%", 100.0 * self.0, f.precision().unwrap_or(1))
-    }
+    let x = Percent::from_total(x_count, n);
+    let tie = Percent::from_total(tie_count, n);
+    let o = Percent::from_total(o_count, n);
+    println!("stats: X={} tie={} O={}", x, tie, o);
 }

@@ -1,23 +1,26 @@
+pub mod percentage;
+pub use percentage::*;
+
 use std::{
     fmt::{Binary, Display},
     ops::Not,
 };
 
 #[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
-pub enum Color {
+pub enum Player {
     #[default]
-    Red,
-    Green,
+    X,
+    O,
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Move {
-    color: Color,
+    color: Player,
     column: usize,
 }
 
 impl Move {
-    fn new(color: Color, column: usize) -> Move {
+    fn new(color: Player, column: usize) -> Move {
         Self { column, color }
     }
 }
@@ -27,7 +30,7 @@ struct BitBoard(u64);
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Board {
-    pub turn: Color,
+    pub turn: Player,
     boards: [BitBoard; 2],
 }
 
@@ -48,7 +51,7 @@ impl Board {
             .collect()
     }
 
-    pub fn drop(&mut self, column: usize, color: Color) {
+    fn drop(&mut self, column: usize, color: Player) {
         let h = self
             .boards
             .iter()
@@ -67,12 +70,12 @@ impl Board {
     }
 
     /// returns the final game state if there is one
-    pub fn state(&self) -> Option<Option<Color>> {
-        if self.boards[Color::Green as usize].has_four() {
-            return Some(Some(Color::Green));
+    pub fn state(&self) -> Option<Option<Player>> {
+        if self.boards[Player::O as usize].has_four() {
+            return Some(Some(Player::O));
         }
-        if self.boards[Color::Red as usize].has_four() {
-            return Some(Some(Color::Red));
+        if self.boards[Player::X as usize].has_four() {
+            return Some(Some(Player::X));
         }
         // full?
         if (0..7).all(|c| self.boards.iter().map(|bb| bb.height(c)).max().unwrap() >= 6) {
@@ -82,43 +85,16 @@ impl Board {
         None
     }
 
-    fn cell(&self, i: usize, j: usize) -> Option<Color> {
-        if self.boards[Color::Red as usize].get(i, j) {
-            Some(Color::Red)
-        } else if self.boards[Color::Green as usize].get(i, j) {
-            Some(Color::Green)
+    fn cell(&self, i: usize, j: usize) -> Option<Player> {
+        if self.boards[Player::X as usize].get(i, j) {
+            Some(Player::X)
+        } else if self.boards[Player::O as usize].get(i, j) {
+            Some(Player::O)
         } else {
             None
         }
     }
 }
-
-// impl Not for Color {
-//     type Output = Color;
-
-//     fn not(self) -> Self::Output {
-//         match self {
-//             Color::Red => Color::Green,
-//             Color::Green => Color::Red,
-//         }
-//     }
-// }
-
-// impl Display for Board {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         for i in 0..6 {
-//             for j in 0..7 {
-//                 match self.columns[j][i] {
-//                     Some(Color::Red) => write!(f, "X")?,
-//                     Some(Color::Green) => write!(f, "O")?,
-//                     None => write!(f, " ")?,
-//                 };
-//             }
-//             writeln!(f)?;
-//         }
-//         Ok(())
-//     }
-// }
 
 impl BitBoard {
     pub fn get(&self, row: usize, col: usize) -> bool {
@@ -165,27 +141,14 @@ impl Binary for BitBoard {
         Ok(())
     }
 }
-impl Display for BitBoard {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let bytes: [u8; 8] = unsafe { std::intrinsics::transmute(self.0) };
-        for i in 0..8 {
-            for j in 0..8 {
-                let ch = if (bytes[j] & (1 << i)) != 0 { 'X' } else { '.' };
-                write!(f, "{}", ch)?;
-            }
-            writeln!(f)?;
-        }
-        Ok(())
-    }
-}
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in (0..6).rev() {
             for j in 0..7 {
                 let ch = match self.cell(i, j) {
-                    Some(Color::Green) => 'X',
-                    Some(Color::Red) => 'O',
+                    Some(Player::X) => 'X',
+                    Some(Player::O) => 'O',
                     None => '.',
                 };
                 write!(f, "{}", ch)?;
@@ -196,13 +159,20 @@ impl Display for Board {
     }
 }
 
-impl Not for Color {
-    type Output = Color;
+impl Not for Player {
+    type Output = Player;
 
     fn not(self) -> Self::Output {
         match self {
-            Color::Red => Color::Green,
-            Color::Green => Color::Red,
+            Player::X => Player::O,
+            Player::O => Player::X,
         }
     }
 }
+
+// .X.....
+// .O.....
+// .X.O...
+// .XOO.OX
+// .OXOOXX
+// XOXOXOX
