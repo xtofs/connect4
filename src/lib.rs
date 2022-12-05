@@ -35,14 +35,6 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn height(&self, column: usize) -> usize {
-        self.boards
-            .iter()
-            .map(|bb| bb.height(column))
-            .max()
-            .unwrap()
-    }
-
     pub fn moves(&self) -> Vec<Move> {
         let color = self.turn;
         (0..7usize)
@@ -52,14 +44,17 @@ impl Board {
     }
 
     fn drop(&mut self, column: usize, color: Player) {
-        let h = self
-            .boards
+        let h = self.height(column);
+        let bb = &mut self.boards[color as usize];
+        bb.set(h, column, true)
+    }
+
+    fn height(&self, column: usize) -> usize {
+        self.boards
             .iter()
             .map(|bb| bb.height(column))
             .max()
-            .unwrap();
-        let bb = &mut self.boards[color as usize];
-        *bb = bb.set(h, column, true)
+            .unwrap()
     }
 
     pub fn play(&mut self, mv: &Move) -> Board {
@@ -78,7 +73,7 @@ impl Board {
             return Some(Some(Player::X));
         }
         // full?
-        if (0..7).all(|c| self.boards.iter().map(|bb| bb.height(c)).max().unwrap() >= 6) {
+        if (0..7).all(|c| self.height(c) >= 6) {
             return Some(None);
         }
 
@@ -111,23 +106,24 @@ impl BitBoard {
         8 - self.column(col).leading_zeros() as usize
     }
 
-    pub fn set(&self, row: usize, col: usize, val: bool) -> BitBoard {
+    pub fn set(&mut self, row: usize, col: usize, val: bool) {
         let mut bytes: [u8; 8] = unsafe { std::intrinsics::transmute(self.0) };
         if val {
             bytes[col] |= 1 << row;
         } else {
             bytes[col] &= !(1 << row);
         }
-        BitBoard(unsafe { std::intrinsics::transmute(bytes) })
+        unsafe { self.0 = std::intrinsics::transmute(bytes) };
     }
 
     pub fn has_four(&self) -> bool {
-        let v = self.0;
+        let bb = self.0;
+        let v = (bb << 0) & (bb << 8) & (bb << 16) & (bb << 24);
+        let h = (bb << 0) & (bb << 1) & (bb << 2) & (bb << 3);
+        let d = (bb << 0) & (bb << 7) & (bb << 14) & (bb << 21);
+        let a = (bb << 0) & (bb << 9) & (bb << 18) & (bb << 27);
 
-        ((v << 0) & (v << 8) & (v << 16) & (v << 24)) != 0
-            || ((v << 0) & (v << 1) & (v << 2) & (v << 3)) != 0
-            || ((v << 0) & (v << 7) & (v << 14) & (v << 21)) != 0
-            || ((v << 0) & (v << 9) & (v << 18) & (v << 27)) != 0
+        v != 0 || h != 0 || d != 0 || a != 0
     }
 }
 
