@@ -15,13 +15,13 @@ pub enum Player {
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Move {
-    color: Player,
+    player: Player,
     column: usize,
 }
 
 impl Move {
-    fn new(color: Player, column: usize) -> Move {
-        Self { column, color }
+    fn new(player: Player, column: usize) -> Move {
+        Self { column, player }
     }
 }
 
@@ -33,16 +33,16 @@ pub struct Board {
 
 impl Board {
     pub fn moves(&self) -> Vec<Move> {
-        let color = self.turn;
+        let player = self.turn;
         (0..7usize)
             .filter(|&column| self.height(column) < 6)
-            .map(|column| Move::new(color, column))
+            .map(|column| Move::new(player, column))
             .collect()
     }
 
-    fn drop(&mut self, column: usize, color: Player) {
+    fn drop(&mut self, column: usize, player: Player) {
         let h = self.height(column);
-        let bb = &mut self.boards[color as usize];
+        let bb = &mut self.boards[player as usize];
         bb.set(h, column, true)
     }
 
@@ -56,7 +56,7 @@ impl Board {
 
     pub fn play(&mut self, mv: &Move) -> Board {
         let mut board = self.clone();
-        board.drop(mv.column, mv.color);
+        board.drop(mv.column, mv.player);
         board.turn = !board.turn;
         board
     }
