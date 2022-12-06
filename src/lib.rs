@@ -4,7 +4,7 @@ pub mod percentage;
 use bitboards::BitBoard;
 pub use percentage::*;
 
-use std::{fmt::Display, ops::Not};
+use std::{collections::HashSet, fmt::Display, ops::Not};
 
 #[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub enum Player {
@@ -86,10 +86,53 @@ impl Board {
             None
         }
     }
+
+    fn four_in_a_row(&self, player: Player) -> HashSet<[usize; 2]> {
+        for i in 0..(6 - 4) {
+            for j in 0..7 {
+                let row = four_in_a_row(i, j, 1, 0);
+                if row
+                    .clone()
+                    .into_iter()
+                    .all(|[k, l]| self.cell(k, l) == Some(player))
+                {
+                    return row.into_iter().collect();
+                }
+            }
+        }
+        for i in 0..6 {
+            for j in 0..(7 - 4) {
+                let row = four_in_a_row(i, j, 0, 1);
+                if row
+                    .clone()
+                    .into_iter()
+                    .all(|[k, l]| self.cell(k, l) == Some(player))
+                {
+                    return row.into_iter().collect();
+                }
+            }
+        }
+        HashSet::default()
+    }
+}
+
+fn four_in_a_row(i: usize, j: usize, di: usize, dj: usize) -> Vec<[usize; 2]> {
+    let mut vec = Vec::new();
+    for d in 0..4 {
+        vec.push([i + d * di, j + d * dj])
+    }
+    vec
 }
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let highlights = if f.alternate() {
+            self.four_in_a_row(!self.turn)
+        } else {
+            HashSet::default()
+        };
+        writeln!(f, "{:?}", highlights)?;
+
         for i in (0..6).rev() {
             for j in 0..7 {
                 let ch = match self.cell(i, j) {
@@ -97,10 +140,15 @@ impl Display for Board {
                     Some(Player::O) => 'O',
                     None => '.',
                 };
-                write!(f, "{}", ch)?;
+                if highlights.get(&[i, j]).is_some() {
+                    write!(f, "\x1B[1;31m{}\x1B[0m", ch)?;
+                } else {
+                    write!(f, "{}", ch)?;
+                }
             }
             writeln!(f)?;
         }
+
         Ok(())
     }
 }

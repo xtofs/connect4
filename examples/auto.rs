@@ -12,7 +12,7 @@ fn main() {
         half_moves += 1;
         match board.state() {
             Some(state) => {
-                println!("{}", board);
+                println!("{:#}", board);
                 println!("game ended: {:?}", state);
                 break;
             }
