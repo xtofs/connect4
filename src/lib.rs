@@ -99,14 +99,22 @@ impl Board {
         None
     }
 
-    #[deprecated(since = "0.0.1")]
-    fn cell(&self, i: usize, j: usize) -> Option<Player> {
-        if self.boards[Player::X as usize].get(i, j) {
-            Some(Player::X)
-        } else if self.boards[Player::O as usize].get(i, j) {
-            Some(Player::O)
-        } else {
-            None
+    // #[deprecated(since = "0.0.1")]
+    // fn cell(&self, i: usize, j: usize) -> Option<Player> {
+    //     if self.boards[Player::X as usize].get(i, j) {
+    //         Some(Player::X)
+    //     } else if self.boards[Player::O as usize].get(i, j) {
+    //         Some(Player::O)
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    fn cell_symbol(&self, i: usize, j: usize) -> char {
+        match self[[i, j]] {
+            Some(Player::X) => 'X',
+            Some(Player::O) => 'O',
+            None => '.',
         }
     }
 
@@ -144,17 +152,10 @@ impl Display for Board {
         if f.alternate() {
             let c4: Connect4Grid = self.into();
             c4.fmt(f)
-            // <c4 as Display>::fmt(f)
         } else {
             for i in (0..6).rev() {
                 for j in 0..7 {
-                    // let ch = match self.cell(i, j) {
-                    let ch = match self[[i, j]] {
-                        Some(Player::X) => 'X',
-                        Some(Player::O) => 'O',
-                        None => '.',
-                    };
-                    // write!(f, "\x1B[1;31m{}\x1B[0m", ch)?;
+                    let ch = self.cell_symbol(i, j);
                     write!(f, "{}", ch)?;
                 }
                 writeln!(f)?;
