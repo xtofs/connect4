@@ -5,11 +5,30 @@ use lazy_static::lazy_static;
 use std::collections::HashSet;
 use std::fmt::Display;
 
+pub(crate) trait Grid<P, const W: usize, const H: usize> {
+    fn get(&self, index: [usize; 2]) -> Option<P>;
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct Connect4Grid([[Option<Player>; 7]; 6]);
+
 #[derive(Debug)]
 pub(crate) struct Pattern<const N: usize> {
     cells: [[usize; 2]; N],
     w: usize,
     h: usize,
+}
+
+impl Grid<Player, 7, 6> for Connect4Grid {
+    fn get(&self, index: [usize; 2]) -> Option<Player> {
+        self.0[index[1]][index[0]]
+    }
+}
+
+impl<const W: usize, const H: usize, P: PartialEq + Copy> Grid<P, W, H> for [[Option<P>; W]; H] {
+    fn get(&self, index: [usize; 2]) -> Option<P> {
+        self[index[0]][index[1]]
+    }
 }
 
 lazy_static! {
@@ -55,21 +74,8 @@ impl<const N: usize> Pattern<N> {
     }
 }
 
-pub(crate) trait Grid<P, const W: usize, const H: usize> {
-    fn get(&self, index: [usize; 2]) -> Option<P>;
-}
-
-impl<const W: usize, const H: usize, P: PartialEq + Copy> Grid<P, W, H> for [[Option<P>; W]; H] {
-    fn get(&self, index: [usize; 2]) -> Option<P> {
-        self[index[0]][index[1]]
-    }
-}
-
-#[derive(Debug, Default)]
-pub(crate) struct Connect4Grid([[Option<Player>; 7]; 6]);
-
 impl Connect4Grid {
-    fn four(&self) -> HashSet<[usize; 2]> {
+    fn get_row_of_four(&self) -> HashSet<[usize; 2]> {
         for pattern in pattens.into_iter() {
             for player in [Player::X, Player::O] {
                 if let Some(set) = pattern.matches(self, player) {
@@ -81,17 +87,11 @@ impl Connect4Grid {
     }
 }
 
-impl Grid<Player, 7, 6> for Connect4Grid {
-    fn get(&self, index: [usize; 2]) -> Option<Player> {
-        self.0[index[1]][index[0]]
-    }
-}
-
 impl From<&Board> for Connect4Grid {
     fn from(board: &Board) -> Self {
         let mut c4 = Connect4Grid::default();
 
-        for i in (0..6).rev() {
+        for i in 0..6 {
             for j in 0..7 {
                 c4.0[i][j] = board.cell(i, j);
             }
@@ -101,9 +101,12 @@ impl From<&Board> for Connect4Grid {
     }
 }
 
+const RED: &'static str = "\x1b[31m";
+const CLR: &'static str = "\x1b[39m";
+
 impl Display for Connect4Grid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let hl = self.four();
+        let hl = self.get_row_of_four();
         for r in 0..self.0.len() {
             let row = self.0[r];
             for c in 0..row.len() {
@@ -113,7 +116,7 @@ impl Display for Connect4Grid {
                     None => '_',
                 };
                 if hl.get(&[c, r]).is_some() {
-                    write!(f, "\x1b[31m{ch}\x1b[39m")?;
+                    write!(f, "{RED}{ch}{CLR}")?;
                 } else {
                     write!(f, "{ch}")?;
                 }
