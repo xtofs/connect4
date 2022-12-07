@@ -1,6 +1,6 @@
 #![feature(associated_type_bounds)]
 // #![feature(const_generics)]
-#![feature(generic_const_exprs)]
+// #![feature(generic_const_exprs)]
 
 mod bitboards;
 mod c4grid;
@@ -148,7 +148,8 @@ impl Display for Board {
         } else {
             for i in (0..6).rev() {
                 for j in 0..7 {
-                    let ch = match self.cell(i, j) {
+                    // let ch = match self.cell(i, j) {
+                    let ch = match self[[i, j]] {
                         Some(Player::X) => 'X',
                         Some(Player::O) => 'O',
                         None => '.',
