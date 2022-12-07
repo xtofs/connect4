@@ -5,7 +5,7 @@ pub(crate) struct BitBoard(u64);
 
 impl BitBoard {
     pub fn get(&self, row: usize, col: usize) -> bool {
-        self.column(col) & 1 << row != 0
+        self.column(col) & 1 << (7 - row) != 0
     }
 
     #[inline]

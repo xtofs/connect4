@@ -1,12 +1,21 @@
+#![feature(associated_type_bounds)]
+// #![feature(const_generics)]
+#![feature(generic_const_exprs)]
+
 mod bitboards;
+mod c4grid;
 mod grids;
 pub mod percentage;
 
 use bitboards::BitBoard;
-use grids::Connect4Grid;
+use c4grid::Connect4Grid;
+use grids::Grid;
 pub use percentage::*;
 
-use std::{fmt::Display, ops::Not};
+use std::{
+    fmt::Display,
+    ops::{Index, Not},
+};
 
 #[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub enum Player {
@@ -90,6 +99,7 @@ impl Board {
         None
     }
 
+    #[deprecated(since = "0.0.1")]
     fn cell(&self, i: usize, j: usize) -> Option<Player> {
         if self.boards[Player::X as usize].get(i, j) {
             Some(Player::X)
@@ -152,3 +162,19 @@ impl Display for Board {
         }
     }
 }
+
+impl Index<[usize; 2]> for Board {
+    type Output = Option<Player>;
+
+    fn index(&self, index: [usize; 2]) -> &Self::Output {
+        if self.boards[Player::X as usize].get(index[0], index[1]) {
+            &Some(Player::X)
+        } else if self.boards[Player::O as usize].get(index[0], index[1]) {
+            &Some(Player::O)
+        } else {
+            &None
+        }
+    }
+}
+
+impl Grid<Player, 7, 6> for Board {}

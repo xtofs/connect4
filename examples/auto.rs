@@ -12,13 +12,13 @@ fn main() {
         half_moves += 1;
         match board.state() {
             Some(state) => {
+                println!("{}", board);
                 println!("{:#}", board);
                 println!("game ended: {:?}", state);
                 break;
             }
             _ => {}
         }
-        // println!("{}", board);
 
         let moves = board.moves();
         if let Some(mv) = moves.choose(&mut rng) {
