@@ -1,74 +1,19 @@
-// mod grids;
+use connect4::{Board, Move, Player};
 
-// use grids::Grid;
-// use std::{collections::HashSet, fmt::Display, str::FromStr};
+fn main() {
+    let mut b = Board::default();
 
-fn main() {}
+    b = b.play(&Move::new(Player::O, 2));
+    b = b.play(&Move::new(Player::X, 2));
+    b = b.play(&Move::new(Player::X, 3));
+    b = b.play(&Move::new(Player::O, 1));
+    b = b.play(&Move::new(Player::O, 1));
+    b = b.play(&Move::new(Player::X, 1));
 
-// fn main() {
-//     #[allow(non_upper_case_globals)]
-//     let grid: C4 = "___X___|__X____|_X_O___|X__OO__|___O_O_|___O__O"
-//         .parse()
-//         .unwrap();
+    b = b.play(&Move::new(Player::O, 0));
+    b = b.play(&Move::new(Player::O, 0));
+    b = b.play(&Move::new(Player::O, 0));
+    b = b.play(&Move::new(Player::X, 0));
 
-//     println!("{:#}", grid);
-//     println!("v {:?}", grids::vertical.matches(&grid, Player::O));
-//     println!("d {:?}", grids::diagonal.matches(&grid, Player::O));
-//     println!("a {:?}", grids::antidiagonal.matches(&grid, Player::X));
-// }
-
-// impl FromStr for C4 {
-//     type Err = String;
-
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         let mut grid: C4 = C4::default();
-//         let mut r = 0;
-//         let mut c = 0;
-//         for ch in s.chars() {
-//             match ch {
-//                 '\n' | '|' => {
-//                     r += 1;
-//                     c = 0;
-//                 }
-//                 'X' => {
-//                     grid.0[r][c] = Some(Player::X);
-//                     c += 1
-//                 }
-//                 'O' => {
-//                     grid.0[r][c] = Some(Player::O);
-//                     c += 1
-//                 }
-//                 '_' | ' ' | '.' => c += 1,
-//                 _ => return Err(format!("unknown character {ch}")),
-//             }
-//         }
-//         Ok(grid)
-//     }
-// }
-
-// impl Display for C4 {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let hl = if f.alternate() {
-//             self.four()
-//         } else {
-//             HashSet::default()
-//         };
-//         for r in 0..self.0.len() {
-//             let row = self.0[r];
-//             for c in 0..row.len() {
-//                 let ch = match self.0[r][c] {
-//                     Some(Player::X) => 'X',
-//                     Some(Player::O) => 'O',
-//                     None => '_',
-//                 };
-//                 if hl.get(&[c, r]).is_some() {
-//                     write!(f, "\x1b[31m{ch}\x1b[39m")?;
-//                 } else {
-//                     write!(f, "{ch}")?;
-//                 }
-//             }
-//             writeln!(f)?;
-//         }
-//         Ok(())
-//     }
-// }
+    println!("{:#}", b);
+}

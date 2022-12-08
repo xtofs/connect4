@@ -12,9 +12,8 @@ fn main() {
         half_moves += 1;
         match board.state() {
             Some(state) => {
-                println!("{}", board);
+                println!("after {half_moves} moves: game ended {:?}", state);
                 println!("{:#}", board);
-                println!("game ended: {:?}", state);
                 break;
             }
             _ => {}
@@ -23,12 +22,13 @@ fn main() {
         let moves = board.moves();
         if let Some(mv) = moves.choose(&mut rng) {
             half_moves += 1;
-            // let player = board.turn;
-            // println!("{half_moves}: {player:?} {mv:?} ");
             board = board.play(&mv);
         } else {
             // no more moves
-            println!("no more moves for {:?}", board.turn,);
+            println!(
+                "after {half_moves} moves: no more moves for {:?}",
+                board.turn,
+            );
             break;
         }
     }

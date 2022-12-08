@@ -1,21 +1,15 @@
 #![feature(associated_type_bounds)]
-// #![feature(const_generics)]
-// #![feature(generic_const_exprs)]
+mod grid_patterns;
 
 mod bitboards;
-mod c4grid;
-mod grids;
 pub mod percentage;
 
 use bitboards::BitBoard;
-use c4grid::Connect4Grid;
-use grids::Grid;
+use grid_patterns::find_four_in_a_row;
 pub use percentage::*;
 
-use std::{
-    fmt::Display,
-    ops::{Index, Not},
-};
+use std::fmt::Display;
+use std::ops::{Index, Not};
 
 #[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub enum Player {
@@ -31,15 +25,15 @@ pub struct Move {
 }
 
 impl Move {
-    fn new(player: Player, column: usize) -> Move {
+    pub fn new(player: Player, column: usize) -> Move {
         Self { column, player }
     }
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone)]
 pub struct Board {
+    pub boards: [BitBoard; 2],
     pub turn: Player,
-    boards: [BitBoard; 2],
 }
 
 impl Not for Player {
@@ -54,6 +48,14 @@ impl Not for Player {
 }
 
 impl Board {
+    const W: usize = 7;
+    const H: usize = 6;
+
+    /// row by row indices
+    fn indices() -> impl Iterator<Item = [usize; 2]> {
+        (0..Board::H).flat_map(|h| (0..Board::W).map(move |w| [h, w]))
+    }
+
     pub fn moves(&self) -> Vec<Move> {
         let player = self.turn;
         (0..7usize)
@@ -62,7 +64,7 @@ impl Board {
             .collect()
     }
 
-    fn drop(&mut self, column: usize, player: Player) {
+    fn drop_into(&mut self, column: usize, player: Player) {
         let h = self.height(column);
         let bb = &mut self.boards[player as usize];
         bb.set(h, column, true)
@@ -76,9 +78,9 @@ impl Board {
             .unwrap() // safe because there is always two boards
     }
 
-    pub fn play(&mut self, mv: &Move) -> Board {
+    pub fn play(&self, mv: &Move) -> Board {
         let mut board = self.clone();
-        board.drop(mv.column, mv.player);
+        board.drop_into(mv.column, mv.player);
         board.turn = !board.turn;
         board
     }
@@ -98,70 +100,29 @@ impl Board {
 
         None
     }
-
-    // #[deprecated(since = "0.0.1")]
-    // fn cell(&self, i: usize, j: usize) -> Option<Player> {
-    //     if self.boards[Player::X as usize].get(i, j) {
-    //         Some(Player::X)
-    //     } else if self.boards[Player::O as usize].get(i, j) {
-    //         Some(Player::O)
-    //     } else {
-    //         None
-    //     }
-    // }
-
-    fn cell_symbol(&self, i: usize, j: usize) -> char {
-        match self[[i, j]] {
-            Some(Player::X) => 'X',
-            Some(Player::O) => 'O',
-            None => '.',
-        }
-    }
-
-    // fn four_in_a_row(&self, player: Player) -> HashSet<[usize; 2]> {
-    //     for i in 0..(6 - 4) {
-    //         for j in 0..7 {
-    //             let row = four_in_a_row(i, j, 1, 0);
-    //             if row
-    //                 .clone()
-    //                 .into_iter()
-    //                 .all(|[k, l]| self.cell(k, l) == Some(player))
-    //             {
-    //                 return row.into_iter().collect();
-    //             }
-    //         }
-    //     }
-    //     for i in 0..6 {
-    //         for j in 0..(7 - 4) {
-    //             let row = four_in_a_row(i, j, 0, 1);
-    //             if row
-    //                 .clone()
-    //                 .into_iter()
-    //                 .all(|[k, l]| self.cell(k, l) == Some(player))
-    //             {
-    //                 return row.into_iter().collect();
-    //             }
-    //         }
-    //     }
-    //     HashSet::default()
-    // }
 }
+
+const RED: &'static str = "\x1b[31m";
+const CLR: &'static str = "\x1b[39m";
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if f.alternate() {
-            let c4: Connect4Grid = self.into();
-            c4.fmt(f)
-        } else {
-            for i in (0..6).rev() {
-                for j in 0..7 {
-                    let ch = self.cell_symbol(i, j);
-                    write!(f, "{}", ch)?;
-                }
-                writeln!(f)?;
+        let grid: [[char; Board::W]; Board::H] = self.into();
+
+        let highlights = find_four_in_a_row(&grid).unwrap();
+
+        for i in (0..Board::H).rev() {
+            for j in 0..Board::W {
+                let ch = grid[i][j];
+                if f.alternate() && highlights.get(&[i, j]).is_some() {
+                    write!(f, "{RED}{ch}{CLR} ")?;
+                } else {
+                    write!(f, "{ch} ")?;
+                };
             }
-            Ok(())
+            writeln!(f)?;
         }
+        Ok(())
     }
 }
 
@@ -169,9 +130,9 @@ impl Index<[usize; 2]> for Board {
     type Output = Option<Player>;
 
     fn index(&self, index: [usize; 2]) -> &Self::Output {
-        if self.boards[Player::X as usize].get(index[0], index[1]) {
+        if self.boards[Player::X as usize].get(7 - index[0], index[1]) {
             &Some(Player::X)
-        } else if self.boards[Player::O as usize].get(index[0], index[1]) {
+        } else if self.boards[Player::O as usize].get(7 - index[0], index[1]) {
             &Some(Player::O)
         } else {
             &None
@@ -179,4 +140,17 @@ impl Index<[usize; 2]> for Board {
     }
 }
 
-impl Grid<Player, 7, 6> for Board {}
+/// convert board to character grid
+impl From<&Board> for [[char; Board::W]; Board::H] {
+    fn from(board: &Board) -> Self {
+        let mut grid = Self::default();
+        for ix in Board::indices() {
+            grid[ix[0]][ix[1]] = match board[ix] {
+                Some(Player::X) => 'X',
+                Some(Player::O) => 'O',
+                None => '.',
+            }
+        }
+        grid
+    }
+}
