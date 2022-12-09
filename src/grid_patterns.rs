@@ -61,3 +61,18 @@ pub fn find_four_in_a_row<const W: usize, const H: usize>(
     }
     None
 }
+
+// // fn number_of_three_in_a_row<const W: usize, const H: usize>(grid: &[[char; W]; H]) {
+// //     const PATTERNS = [
+// //         Pattern::new([[0,0],[0,1],[0,2]]),
+// //         Pattern::new([[0,0],[1,0],[2,0]]),
+// //         Pattern::new([[0,0],[1,1],[2,2]]),
+// //         Pattern::new([[0,0],[0,1],[0,2]]),
+// //     ];
+// //     for pattern in [.iter() {
+// //         if let Some(set) = pattern.matches(grid, |ch| ch == piece) {
+// //             return Some(set);
+// //         }
+// //     }
+
+// }

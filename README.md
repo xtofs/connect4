@@ -9,3 +9,7 @@ cargo build --release --example stats && time ./target/release/examples/stats 10
 ```sh
 CARGO_PROFILE_RELEASE_DEBUG=true sudo cargo flamegraph --example stats -- 100000 && open ./flamegraph.svg
 ```
+
+# ANSI Color Codes
+
+https://talyian.github.io/ansicolors/

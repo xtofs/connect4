@@ -4,11 +4,11 @@ mod grid_patterns;
 mod percentage;
 mod strategies;
 
+use grid_patterns::find_four_in_a_row;
 pub use percentage::*;
 pub use strategies::*;
 
 use bitboards::BitBoard;
-use grid_patterns::find_four_in_a_row;
 use std::fmt::Display;
 use std::ops::{Index, Not};
 
@@ -87,18 +87,28 @@ impl Board {
     }
 
     /// returns the final game state if there is one
+    /// outer Option is Some if game is finished
+    /// inner Option is Some if there is a winner (not a tie)
     pub fn state(&self) -> Option<Option<Player>> {
-        if self.boards[Player::O as usize].has_four() {
-            return Some(Some(Player::O));
-        }
-        if self.boards[Player::X as usize].has_four() {
-            return Some(Some(Player::X));
+        if let Some(winner) = self.is_win() {
+            return Some(Some(winner));
         }
         // full?
         if (0..7).all(|c| self.height(c) >= 6) {
             return Some(None);
         }
 
+        None
+    }
+
+    pub fn is_win(&self) -> Option<Player> {
+        if self.boards[Player::X as usize].has_four() {
+            return Some(Player::X);
+        }
+        if self.boards[Player::O as usize].has_four() {
+            return Some(Player::O);
+        }
+        // either a tie or unfinished
         None
     }
 }

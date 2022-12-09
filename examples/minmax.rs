@@ -13,9 +13,36 @@ impl MinMax {
 }
 
 impl Strategy for MinMax {
+    // 7^7 = 823,543
     fn choose<'a>(&mut self, moves: &'a [Move]) -> Option<&'a Move> {
         moves.choose(&mut thread_rng())
     }
+}
+
+fn heuristic_value(board: &Board) -> i32 {
+    todo!()
+}
+
+// (* Initial call for Player A's root node *)
+// negamax(rootNode, depth, 1)
+// (* Initial call for Player B's root node *)
+// negamax(rootNode, depth, −1)
+
+fn negamax(board: &Board, depth: usize, player: Player, color: i32) -> i32 {
+    // if depth = 0 or node is a terminal node then
+    if depth == 0 {
+        return color * heuristic_value(board);
+    } else if let Some(winner) = board.is_win() {
+        return if winner == player { i32::MAX } else { i32::MIN };
+    }
+
+    board
+        .moves()
+        .into_iter()
+        .map(|mv| -negamax(&board.play(&mv), depth - 1, !player, -color))
+        .max()
+        // .max_by_key(|mv| -negamax(&board.play(mv), depth - 1, !player, -color))
+        .expect("no more moves")
 }
 
 fn main() {

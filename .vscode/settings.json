@@ -5,6 +5,7 @@
         "bitboards",
         "flamegraph",
         "intrinsics",
+        "negamax",
         "rngs"
     ]
 }
