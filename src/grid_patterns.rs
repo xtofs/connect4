@@ -4,8 +4,7 @@ use std::collections::HashSet;
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Pattern<const N: usize> {
     cells: [[usize; 2]; N],
-    w: usize,
-    h: usize,
+    sz: [usize; 2],
 }
 
 lazy_static! {
@@ -21,7 +20,7 @@ impl<const N: usize> Pattern<N> {
     fn new(cells: [[usize; 2]; N]) -> Self {
         let w = cells.into_iter().map(|[i, _]| i).max().unwrap();
         let h = cells.into_iter().map(|[_, j]| j).max().unwrap();
-        Self { cells, w, h }
+        Self { cells, sz: [w, h] }
     }
 
     pub fn matches<const W: usize, const H: usize, P>(
@@ -32,9 +31,15 @@ impl<const N: usize> Pattern<N> {
     where
         P: Fn(char) -> bool,
     {
-        for w in 0..W - self.w {
-            for h in 0..H - self.h {
-                let pat = self.cells.map(|[k, l]| [w + k, h + l]);
+        for w in 0..W - self.sz[1] {
+            for h in 0..H - self.sz[0] {
+                let pat = self.cells.map(|[k, l]| [h + k, w + l]);
+                if pat.into_iter().any(|c| c[0] >= H) {
+                    println!();
+                }
+                if pat.into_iter().any(|c| c[1] >= W) {
+                    println!();
+                }
                 if pat.into_iter().all(|ix| predicate(grid[ix[0]][ix[1]])) {
                     return Some(pat.into_iter().collect());
                 }
