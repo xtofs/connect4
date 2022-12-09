@@ -1,30 +1,24 @@
-use connect4::{Board, Move, Percent, Player};
-use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng};
 use std::{env::args, time::SystemTime};
 
-trait Strategy {
-    fn choose<'a>(&mut self, moves: &'a [Move]) -> Option<&'a Move>;
-}
+use connect4::{Board, Move, Percent, Player, RandomStrategy, Strategy};
+use rand::{seq::SliceRandom, thread_rng};
 
 #[derive(Debug)]
-struct RandomStrategy {
-    rng: ThreadRng,
-}
+pub struct MinMax {}
 
-impl RandomStrategy {
-    fn new() -> Self {
-        RandomStrategy { rng: thread_rng() }
+impl MinMax {
+    pub fn new() -> Self {
+        MinMax {}
     }
 }
 
-impl Strategy for RandomStrategy {
+impl Strategy for MinMax {
     fn choose<'a>(&mut self, moves: &'a [Move]) -> Option<&'a Move> {
-        moves.choose(&mut self.rng)
+        moves.choose(&mut thread_rng())
     }
 }
 
 fn main() {
-    let mut rng = thread_rng();
     let (mut x_count, mut tie_count, mut o_count) = (0, 0, 0);
 
     let n: usize = args().nth(1).map(|n| n.parse().unwrap()).unwrap_or(1000);

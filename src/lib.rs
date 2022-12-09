@@ -2,8 +2,10 @@
 mod bitboards;
 mod grid_patterns;
 mod percentage;
+mod strategies;
 
 pub use percentage::*;
+pub use strategies::*;
 
 use bitboards::BitBoard;
 use grid_patterns::find_four_in_a_row;

@@ -4,6 +4,7 @@
         "bitboard",
         "bitboards",
         "flamegraph",
-        "intrinsics"
+        "intrinsics",
+        "rngs"
     ]
 }
