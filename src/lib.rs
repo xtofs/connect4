@@ -1,10 +1,12 @@
-#![feature(associated_type_bounds)]
+#![feature(generators, iter_from_generator)]
 mod bitboards;
 mod grid_patterns;
+mod grids;
 mod percentage;
 mod strategies;
 
 use grid_patterns::find_four_in_a_row;
+pub use grids::*;
 pub use percentage::*;
 pub use strategies::*;
 
